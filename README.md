@@ -122,6 +122,25 @@ Morphological Plots
 ```
 
 ---
+## Calibration
+
+## Calibration
+
+Pixel-based measurements are converted to physical units using calibration factors determined from the imaging setup used in this study.
+
+| Parameter | Value | Description |
+|------------|---------|-------------|
+| `px_per_mm_vert` | 8.117542 pixels/mm | Conversion factor used for stem length and internode length measurements |
+| `px_per_mm_diam` | 8.0 pixels/mm | Conversion factor used for stem diameter measurements |
+
+**Important:** These calibration values are specific to the camera, lens, imaging distance, image resolution, and acquisition setup used in this study. Users applying the pipeline to images collected under different conditions should determine new calibration factors appropriate for their own imaging system and update the values in the code before analysis.
+
+```python
+px_per_mm_vert = 8.0759136
+px_per_mm_diam = 7.9575597
+```
+
+Failure to recalibrate when using a different imaging setup may result in inaccurate physical measurements.
 
 # Methodology
 
@@ -295,19 +314,20 @@ The software has been tested using:
 
 * Python 3.10+
 
-Major dependencies include:
+## Dependency Documentation
 
-* OpenCV
-* NumPy
-* Pandas
-* SciPy
-* scikit-image
-* OpenPyXL
-* Pillow
-* Matplotlib
-* RawPy
-* Requests
-* Ultralytics YOLO
+- NumPy: https://numpy.org/doc/
+- OpenCV: https://docs.opencv.org/
+- scikit-image: https://scikit-image.org/docs/stable/
+- Pandas: https://pandas.pydata.org/docs/
+- OpenPyXL: https://openpyxl.readthedocs.io/en/stable/
+- Matplotlib: https://matplotlib.org/stable/contents.html
+- Pillow: https://pillow.readthedocs.io/en/stable/
+- RawPy: https://letmaik.github.io/rawpy/
+- Requests: https://requests.readthedocs.io/en/latest/
+- SciPy: https://docs.scipy.org/doc/scipy/
+- Ultralytics YOLO: https://docs.ultralytics.com/
+
 
 All dependencies are listed in:
 

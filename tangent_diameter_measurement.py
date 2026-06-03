@@ -17,10 +17,18 @@ from openpyxl.styles import Font
 from openpyxl.worksheet.hyperlink import Hyperlink
 import matplotlib.pyplot as plt
 import os
+## Calibration Parameters
 
+# The pipeline converts pixel measurements to physical units using image-specific calibration factors:
+
+# - Vertical scale factor (`px_per_mm_vert`): 8.117542 pixels/mm
+# - Diameter scale factor (`px_per_mm_diam`): 8.0 pixels/mm
+
+# These calibration values were derived from the imaging setup used in this study and are applied to convert pixel-based stem length and diameter measurements into millimeters.
 # ── USER SETTINGS ───────────────────────────────────────────────────────────────
-px_per_mm_vert = 8.117542
-px_per_mm_diam = 8.0
+
+px_per_mm_vert = 8.0759136
+px_per_mm_diam = 7.9575597
 
 MIN_NODE_GAP_CM = 2.0
 MIN_VALID_ROWS_FOR_NODE_SNAP = 3
@@ -869,7 +877,6 @@ def process_single_stem(image_path, label_path, output_dir, global_node_start=1)
         summary = pd.DataFrame({
             "Segment": segment_order.astype(str),
             "Node Count": node_counts.reindex(segment_order).fillna(0).astype(int).values,
-            "Avg Internode Length (cm)": internode_length_mean.reindex(segment_order).values,
             "Avg Tangent Diameter (mm)": avg_diameter.reindex(segment_order).values,
             "Curvature (deg)": [round(90 - i * 15.23, 2) for i in range(len(segment_order))]
         })
