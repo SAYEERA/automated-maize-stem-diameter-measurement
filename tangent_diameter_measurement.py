@@ -52,8 +52,7 @@ NODE_TEXT_THICKNESS = 5
 LABEL_X_OFFSET = 32
 
 # Processing log. Batches listed here are skipped on later runs.
-diameter_log = os.path.join(
-    r"C:/Users/sayee/OneDrive/Desktop/Corn_Diameter/test_images/output_sessions",
+diameter_log = os.path.join("test_images/sample_outputs",
     "diameter_completed_batches.txt"
 )
 
@@ -396,7 +395,7 @@ def draw_measurement(img, tangent_measurement, diameter_mm, text_label):
 # ── MAIN BATCH ───────────────────────────────────────────────────────────
 def batch_process_stems():
     """Process all batch folders and save tangent-only outputs."""
-    base_batch_dir = Path(r"C:/Users/sayee/OneDrive/Desktop/Corn_Diameter/test_images/output_sessions")
+    base_batch_dir = Path("test_images/sample_outputs")
 
     for batch_folder in sorted(base_batch_dir.glob("batch_*")):
         batch_name = batch_folder.name
@@ -900,7 +899,6 @@ def process_single_stem(image_path, label_path, output_dir, global_node_start=1)
         x_pos = np.arange(len(x_labels))
         ax.plot(x_pos, summary_plot["Node Count"], marker="o", label="Node Count")
         ax.plot(x_pos, summary_plot["Avg Tangent Diameter (mm)"], marker="s", label="Avg Tangent Diameter (mm)")
-        ax.plot(x_pos, summary_plot["Avg Internode Length (cm)"], marker="^", label="Avg Internode Length (cm)")
         ax.plot(x_pos, summary_plot["Curvature (deg)"] / 10, marker="d", label="Curvature (deg / 10)")
         ax.set_title(f"Stem {stem_id} - Segment-wise Tangent Analysis")
         ax.set_xlabel("Segment (cm)")

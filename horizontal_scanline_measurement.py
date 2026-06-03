@@ -68,7 +68,7 @@ TEXT_THICKNESS = 5
 LABEL_X_OFFSET = 32
 
 # Update this path for your local project.
-BASE_BATCH_DIR = Path(r"C:/Users/sayee/OneDrive/Desktop/Corn_Diameter/test_images/output_sessions")
+BASE_BATCH_DIR = Path("test_images/sample_outputs")
 DIAMETER_LOG_PATH = BASE_BATCH_DIR / "horizontal_scanline_completed_batches.txt"
 
 
