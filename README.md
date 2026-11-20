@@ -82,7 +82,7 @@ and `<session>_method_comparison_summary.xlsx` combines all photos of a session.
 ## Other folders
 
 - `test_images/`: example input photos and example outputs.
-- `old_version_v1/`: the code used in the original submission (v1.0.0, archived at
+- `old_version_v1/`: the code used in the original submission (v1.0.1, archived at
   https://doi.org/10.5281/zenodo.20834860). It is kept for reference; use the scripts
   in the top folder.
 
