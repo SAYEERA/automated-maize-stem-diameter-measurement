@@ -26,7 +26,7 @@ Open `config.py` and set three paths:
 | `MODEL_PATH` | trained YOLOv8n weights (`best.pt`) |
 
 The trained weights, the annotated images and labels, and the train/validation/test
-lists are on Zenodo: https://doi.org/______
+lists are on Zenodo: https://doi.org/10.5281/zenodo.24385780
 
 Input layout:
 
