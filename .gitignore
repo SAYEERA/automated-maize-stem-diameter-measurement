@@ -6,3 +6,7 @@ __pycache__/
 .DS_Store
 Thumbs.db
 *.log
+# data and model weights (archived on Zenodo)
+data/
+models/
+*.pt

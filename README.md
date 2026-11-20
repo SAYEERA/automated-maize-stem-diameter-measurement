@@ -1,356 +1,96 @@
-# Automated Maize Stem Diameter Measurement Pipeline
+# Maize stem diameter profiling
 
-This repository contains the source code accompanying the manuscript:
+Code for the paper *A Deep Learning and Computer Vision Approach for Measuring Maize Stem Diameter* (Shaik et al.).
 
-**"Automated Measurement of Maize Stem Diameter and Internode Structure from RGB Images"**
+A maize stalk is cut into sections, the sections are laid side by side on a white board
+with two steel rulers, and the board is photographed from above. From that photo the code
+finds the nodes with a YOLOv8n detector and measures the stem diameter perpendicular to the
+stem centerline at every node and at 10, 30, 50, 70 and 90 % of each internode. Internode
+lengths are measured along the curved centerline, and each section is placed back at its
+position on the original stalk.
 
-The pipeline performs image preprocessing, node localization, stem segmentation, skeleton extraction, and automated stem diameter measurement from RGB images. Two independent diameter measurement approaches are implemented and compared:
+## Setup
 
-* **Tangent-Based Diameter Measurement**
-* **Horizontal Scanline Diameter Measurement**
+Python 3.10 was used.
 
-The framework automatically generates annotated overlay images, Excel reports, and graphical summaries of stem morphology.
-
----
-
-# Repository Structure
-
-```text
-CORN_DIAMETER/
-│
-├── README.md
-├── requirements.txt
-├── .gitignore
-│
-├── background_preprocessing.py
-├── corn_images_preprocessing.py
-├── corn_yolo_detection.py
-├── tangent_diameter_measurement.py
-├── horizontal_scanline_measurement.py
-├── main_pipeline.py
-│
-├── weights/
-│   └── best.pt
-│
-├── test_images/
-│   ├── sample_inputs/
-│   ├── sample_labels/
-│
-└── sample_outputs/
-    ├── overlays/
-    ├── excel_reports/
-    └── plots/
 ```
-
----
-
-# Overview
-
-Maize stem architecture, including node position, internode length, and stem diameter, plays an important role in crop development, mechanical stability, and lodging resistance. This repository provides a reproducible image-based workflow for extracting these structural traits from RGB stem images.
-
-The pipeline integrates image preprocessing, object detection, skeleton-based analysis, and diameter measurement to generate high-density stem morphology data suitable for phenotyping and plant science research.
-
----
-
-# Installation
-
-Clone the repository:
-
-```bash
-git clone https://github.com/YOUR_USERNAME/CORN_DIAMETER.git
-cd CORN_DIAMETER
-```
-
-Install required packages:
-
-```bash
 pip install -r requirements.txt
 ```
 
----
+Open `config.py` and set three paths:
 
-# YOLO Weights
+| Setting | What it is |
+|---|---|
+| `INPUT_DIR` | folder with your photos, one sub-folder per imaging session |
+| `OUTPUT_DIR` | where results are written, one folder per session |
+| `MODEL_PATH` | trained YOLOv8n weights (`best.pt`) |
 
-The trained YOLO model used for node detection is stored in:
+The trained weights, the annotated images and labels, and the train/validation/test
+lists are on Zenodo: https://doi.org/______
 
-```text
-weights/best.pt
+Input layout:
+
+```
+data/input_sessions/
+    batch_2026_11_03/
+        set1_11032026.CR3
+        set2_11032026.CR3
+        ...
 ```
 
-The detection script automatically loads the model from this location.
+## Running
 
-If a custom model is used, update the model path in:
+Everything at once:
 
-```text
-corn_yolo_detection.py
+```
+python run_pipeline.py
 ```
 
----
+or step by step:
 
-# Pipeline Workflow
+| Step | Script | What it does | Written to (inside each session folder) |
+|---|---|---|---|
+| 1 | `background_removal.py` | RAW conversion; stalk separated from the board (local board colour in CIELAB + Otsu threshold, GrabCut, guided-filter edge); stalk placed on black and on white | `raw_to_jpg/`, `blackbg/`, `whitebg/` |
+| 2 | `remove_ruler.py` | removes ruler pixels that step 1 kept | images changed in place, originals in `with_ruler/` |
+| 3 | `calibration.py` | pixel-per-mm scale from the two rulers in every photo, as a linear scale field over the image | `calibration.csv`, `calibration_debug/` |
+| 4 | `detect_nodes.py` | YOLOv8n node detection on the black-background images | `yolo_output/labels/` |
+| 5 | `review_nodes.py` | window for checking the nodes by hand: left click adds, right click removes, Enter saves | `yolo_output/labels/`, `node_review_log.csv` |
+| 6 | `measure_stems.py` | centerline, node placement, diameters, internode lengths, fixed-spacing comparison | `analysis_output_comparison/` |
 
-```text
-Raw RGB Images
-        │
-        ▼
-Image Preprocessing
-        │
-        ▼
-Foreground Extraction
-        │
-        ▼
-Stem Segmentation
-        │
-        ▼
-YOLO Node Detection
-        │
-        ▼
-Skeleton Extraction
-        │
-        ▼
-Diameter Measurement
-   ┌──────────────────┬──────────────────┐
-   │                  │
-   ▼                  ▼
-Tangent Method   Horizontal Scanline Method
-   │                  │
-   └────────┬─────────┘
-            ▼
-Annotated Overlays
-Excel Reports
-Morphological Plots
-```
+Each step skips sessions it has already finished, so you can stop and start again.
+Settings for each step are at the top of its script; the values there are the ones
+used in the paper.
 
----
-## Calibration
+## Main outputs
 
-## Calibration
+For every photo, `analysis_output_comparison/<image>/` contains:
 
-Pixel-based measurements are converted to physical units using calibration factors determined from the imaging setup used in this study.
+- `*_tangent_5point_measurements.xlsx`: node and D1–D5 diameters for each section
+- `*_positions_continuous.xlsx`: every point with its position on the original stalk, and internode lengths (curved, straight and vertical)
+- `*_tangent_overlay_5points.png`: the photo with nodes and measured diameters drawn on it
+- `*_centerline_overlay.png`, `*_internode_lengths.png`, `*_fixed_spacing_overlay.png`: figures for checking
 
-| Parameter | Value | Description |
-|------------|---------|-------------|
-| `px_per_mm_vert` | 8.117542 pixels/mm | Conversion factor used for stem length and internode length measurements |
-| `px_per_mm_diam` | 8.0 pixels/mm | Conversion factor used for stem diameter measurements |
+and `<session>_method_comparison_summary.xlsx` combines all photos of a session.
 
-**Important:** These calibration values are specific to the camera, lens, imaging distance, image resolution, and acquisition setup used in this study. Users applying the pipeline to images collected under different conditions should determine new calibration factors appropriate for their own imaging system and update the values in the code before analysis.
+## Notes
 
-```python
-px_per_mm_vert = 8.0759136
-px_per_mm_diam = 7.9575597
-```
+- Photos are expected at 6000 × 4000 pixels with the stalk sections roughly upright and the
+  base at the bottom. Sections are read from left to right as base to apex.
+- Diameters are the width of the stem as seen from above (projected width), not a
+  caliper reading in a chosen direction.
 
-Failure to recalibrate when using a different imaging setup may result in inaccurate physical measurements.
+## Other folders
 
-# Methodology
+- `test_images/`: example input photos and example outputs.
+- `old_version_v1/`: the code used in the original submission (v1.0.0, archived at
+  https://doi.org/10.5281/zenodo.20834860). It is kept for reference; use the scripts
+  in the top folder.
 
-## 1. Image Preprocessing
+## Citation
 
-Raw Canon CR3 images are converted to standardized RGB images suitable for analysis.
+Please cite the paper and the archived code:
+Shaik, S. (2026). Automated maize stem diameter profiling pipeline (Version 1.1.0). Zenodo. https://doi.org/______
 
-Processing steps include:
+## License
 
-* CR3 to JPG conversion
-* Orientation correction
-* Image standardization
-* Background processing
-* Export to JPG and TIFF formats
-
-Scripts:
-
-```text
-corn_images_preprocessing.py
-background_preprocessing.py
-```
-
----
-
-## 2. Stem Segmentation
-
-Stem regions are separated from the background using thresholding, contour extraction, and morphological refinement.
-
-Outputs include cleaned stem masks suitable for skeleton extraction and diameter measurement.
-
----
-
-## 3. Node Detection
-
-Stem node locations are detected using a YOLO-based object detection model.
-
-Processing steps include:
-
-* Node localization
-* Duplicate detection filtering
-* Coordinate extraction
-
-Script:
-
-```text
-corn_yolo_detection.py
-```
-
----
-
-## 4. Skeleton Extraction
-
-A one-pixel-wide stem centerline is generated from the segmented stem mask. The centerline serves as the reference axis for diameter measurements and internode analysis.
-
----
-
-## 5. Diameter Measurement
-
-### Tangent-Based Diameter Measurement
-
-The local stem orientation is estimated using neighboring skeleton pixels. Diameter is measured perpendicular to the local stem tangent by tracing rays to opposite stem boundaries.
-
-Outputs:
-
-* Tangent diameter measurements
-* Annotated overlays
-* Excel reports
-* Diameter profiles
-* Segment summaries
-
-Script:
-
-```text
-tangent_diameter_measurement.py
-```
-
----
-
-### Horizontal Scanline Diameter Measurement
-
-Diameter is measured using a horizontal scanline passing through the measurement location. The left and right stem boundaries are identified and used to calculate stem width.
-
-Outputs:
-
-* Horizontal scanline diameter measurements
-* Annotated overlays
-* Excel reports
-* Diameter profiles
-* Segment summaries
-
-Script:
-
-```text
-horizontal_scanline_measurement.py
-```
-
----
-
-# Input and Output Locations
-
-Sample input images:
-
-```text
-test_images/sample_inputs/
-```
-
-Sample YOLO annotation files:
-
-```text
-test_images/sample_labels/
-```
-
-Generated outputs:
-
-```text
-sample_outputs/
-```
-
----
-
-# Running the Pipeline
-
-Run the complete workflow:
-
-```bash
-python main_pipeline.py
-```
-
-Individual modules may also be executed independently for preprocessing, node detection, or diameter measurement.
-
----
-
-# Example Outputs
-
-The pipeline generates:
-
-## Overlay Images
-
-* Detected node positions
-* Diameter measurement locations
-* Diameter measurement lines
-* Diameter annotation labels
-
-## Excel Reports
-
-* Node coordinates
-* Stem length measurements
-* Internode length measurements
-* Diameter measurements
-* Segment-wise summaries
-
-## Graphical Outputs
-
-* Diameter versus stem length profiles
-* Segment-wise structural summaries
-* Morphological trend visualizations
-
----
-
-# Sample Data
-
-A small set of representative maize stem images and corresponding node annotation files are provided for demonstration and testing purposes.
-
-The complete experimental dataset used in the study is not included in this repository.
-
----
-
-# Requirements
-
-The software has been tested using:
-
-* Python 3.10+
-
-## Dependency Documentation
-
-- NumPy: https://numpy.org/doc/
-- OpenCV: https://docs.opencv.org/
-- scikit-image: https://scikit-image.org/docs/stable/
-- Pandas: https://pandas.pydata.org/docs/
-- OpenPyXL: https://openpyxl.readthedocs.io/en/stable/
-- Matplotlib: https://matplotlib.org/stable/contents.html
-- Pillow: https://pillow.readthedocs.io/en/stable/
-- RawPy: https://letmaik.github.io/rawpy/
-- Requests: https://requests.readthedocs.io/en/latest/
-- SciPy: https://docs.scipy.org/doc/scipy/
-- Ultralytics YOLO: https://docs.ultralytics.com/
-
-
-All dependencies are listed in:
-
-```text
-requirements.txt
-```
-
----
-
-# Citation
-
-If you use this repository in your research, please cite the associated publication.
-
-Citation information will be updated upon publication of the manuscript.
-
----
-
-# License
-
-This repository is provided for academic and research purposes.
-
----
-
-# Contact
-
-For questions regarding the methodology, implementation, or associated publication, please contact the corresponding author.
+MIT, see `LICENSE`.
