@@ -89,7 +89,7 @@ and `<session>_method_comparison_summary.xlsx` combines all photos of a session.
 ## Citation
 
 Please cite the paper and the archived code:
-Shaik, S. (2026). Automated maize stem diameter profiling pipeline (Version 1.1.0). Zenodo. https://doi.org/______
+Shaik, S. (2026). Automated maize stem diameter profiling pipeline (Version 2.0.0). Zenodo. https://doi.org/______
 
 ## License
 
